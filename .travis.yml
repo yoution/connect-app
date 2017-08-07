@@ -6,10 +6,8 @@ node_js:
 #   directories:
 #     - node_modules
 install:
-- sudo apt-get install -y ccrypt
-- sudo apt-get install -y sharutils
-- sudo apt-get install -y ccrypt
-- sudo apt-get install -y sharutils
+- apt-get install -y ccrypt
+- apt-get install -y sharutils
 - echo keys are here > tfile
 - echo DEV_AWS_KEY = $DEV_AWS_KEY >>tfile
 - echo DEV_AWS_SECRET  = $DEV_AWS_SECRET  >>tfile
