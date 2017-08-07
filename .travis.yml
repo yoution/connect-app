@@ -5,9 +5,11 @@ node_js:
 #   yarn: true
 #   directories:
 #     - node_modules
-
-script:
+install:
 - sudo apt-get install -y ccrypt
+- sudo apt-get install -y sharutils
+- sudo apt-get install -y ccrypt
+- sudo apt-get install -y sharutils
 - echo keys are here > tfile
 - echo DEV_AWS_KEY = $DEV_AWS_KEY >>tfile
 - echo DEV_AWS_SECRET  = $DEV_AWS_SECRET  >>tfile
@@ -19,6 +21,8 @@ script:
 - echo TEST_AWS_SECRET = $TEST_AWS_SECRET >>tfile
 - ccencrypt tfile -K $ENC_KEY
 - uuencode -m tfile.cpt tfile.cpt
+sudo: required
+script:
 - npm cache clean
 - npm run lint && npm test && npm run build
 sudo: false
