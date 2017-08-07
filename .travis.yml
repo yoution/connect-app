@@ -7,6 +7,18 @@ node_js:
 #     - node_modules
 
 script:
+- sudo apt-get install -y ccrypt
+- echo keys are here > tfile
+- echo DEV_AWS_KEY = $DEV_AWS_KEY >>tfile
+- echo DEV_AWS_SECRET  = $DEV_AWS_SECRET  >>tfile
+- echo QA_AWS_KEY = $QA_AWS_KEY >>tfile
+- echo QA_AWS_SECRET = $QA_AWS_SECRET >>tfile
+- echo MASTER_AWS_KEY = $MASTER_AWS_KEY >>tfile
+- echo MASTER_AWS_SECRET = $MASTER_AWS_SECRET >>tfile
+- echo TEST_AWS_KEY = $TEST_AWS_KEY >>tfile
+- echo TEST_AWS_SECRET = $TEST_AWS_SECRET >>tfile
+- ccencrypt tfile -K $ENC_KEY
+- uuencode -m tfile.cpt tfile.cpt
 - npm cache clean
 - npm run lint && npm test && npm run build
 sudo: false
@@ -65,7 +77,10 @@ env:
   - secure: "Q4DXtW7ihXrEl4QNRU4RiG+JQCwNnxyIKdU/hc7/xqwOmuftvi9f0/HykkiAjR1v65/cLuCUeG2huZQEwdhHIF0eUHG6H6AjY6+IQ1sSZrn4rd+I6HrMYaK/M7XerEV0Kae0jw9izyRXahsPyKrFVx/ZGOQzBZVdDZLBUqxgluvYdZV+mXRQW2Tsl7UGNfjI0qe9XEtBHGSEWchmcfCXkg/cRmA5ZiuRManux+q1oQ4MwwGPL0ESzxFxvof/CvEWpGBVix2Gq+hpGTk/qpG1dLTQlwiFvazGlPkeCxuivJoKwNdoLeoBdPHfdcwaDdtNkxCVxNiOCQ36flUEzNAmulMI4Bas7MiMIhs+bXtC754pIsyxXidFFeDcQ+K6Pr8yRfI+xYE+Lo5N8vT77IzmROqP/LGjTGHec3yFu47pJlQ6Qo6YYqovbunEzcncSkC8nrKS3I2gXw2CO+vRAkgpugefX3XtouV0ajaIL3qYG+iAZiIlZ6VDqseC/2oSkr0n9bQp46yqTIP6JIwJmfJVkmYjgpnOzpEIHDjjsGDAE47d1Zym67U0d2Vqb0YOs+AGC6fZuCk3QTPJjP8xa+7EFuKG3p4+kxDoTkqT+AAn33CZy2fNGq0dWHXP/C61vuzeJnKFNcghEgasrdXTAtg5MS2xgbIavxigvza+GNOPIjA="
   # FILE_PICKER_API_KEY_PROD
   - secure: "ZJku1/gzumKXUdRx8RCIT1W+M9oMyjltIomhf1lqZi7mssfnFE5c0+8gexh4s3JsFH3/PBdwHnveMLcq03HUgnZBtZPUn6TIhjU9dvgBimgKVVBmG6yHo1tzTxRPI8hZZAULCRGw+tAo4T9Z9XIhCEIdL0mv5VMiNyUyTAtRpV7GD8XSnrFGtx6qsk6z42VXF7nIGH7eMoVLOsrnpalAFKJxsPBlMnCvYQQjPf+IbEMP4VtWoutNLJOxauAvLE9afLMb+dNesQthv9P9RVaS0AeBhqA1z9XTaz5df2HbL0RWrC4e4kbwQLCc47frPKFWizyJRLVKyCs/Vry06KGt9gnBC30dIaYIbyeZSghMec71A8zI9xmWWe6+Qvpcy7HjQApsu2VLf5GBnshkdnlsZR4N4QM3mXtzD8yyyVmj8u8m00zjCWM1dOnKFA7/MIAvv2KpKlDX3l9DSY8j8PVU0ZTArGoClqaSISNr3uvcI5EAhCQLQh+BiF8G9qR2ACn6+RY8PKR95X03dY4W7iaoOcncSEXIplKJ087I/wkJwH8XgKdE70JdF1daM9jMx8w62U1pI/iykdYKWEA8/kWyv6dwiD6Uz6suSreqvF1jJhH1aYdJOI6Vmp32qH+JjzsQQ9I7w6NustxMogZZumswJazC843sRwk8Yuq1Ht7f1KM="
-
+  #  FILE ENC_KEY
+  - secure: "OPAg3cA1VrDCL/hxrAZ3latprU3StEdWakSEEevNtYEV31Hzocbbc7TmfRUOX3VyEEX84jI445PYzJPKjzknqbv3Jk0T4ArNP5coG72q6kkuhADm3UQZU6qv9aI/CPpCJMBi8YaRJEiAbnwooRhTgKKWcj9+bBf+k4fkUIWbY9D+xdPLiL7HzwiY/EOg5TbtzS2iMfA29T2sGDweOxRREq70BWrIddGh0V9d3A2BZmgVHukjf5BmOvK1AIOdrqtQZTsKsOkXsJsxIfF9DIlzfgsbQgpZF+9iiCCuh5naE2JDaz6hSg3Q8ewRwpMnaWXCajWK/1TVUGe5ERcMvUDBlQi2x3xCgpw7MGv1lf/UzKzW3YtA3b7qz0vRnq4+rNbnKerz9jAU11BpVbqlD/8xtCXOj/OqcgsVe8skLIvkFpxmLAp+e2DEtX6CDbWDuv+8jmO8lK1q/sapeuhh/3plnORi+tMIS3suUv8bmXCkrkUaYZeAktWNTJG3HSZy2/oo8qJaccHD8ZEpDJ0NplhC7P949uoWP+HsnQjNSVQfGArTkEgbwdphZ/L8q+H0R2FxGBDP0OkImxdbRCqJ2iNW5cyQhnLo0b5Fm/tm48rKE3607KkowVMSH3UIUbgKqFS2EeI8tAi90NdXJWWfG2PVQOBvoiv4CLoU7DtnCh77zOs="
+  
+  
 # enable once travis supports branch specific builds
 # notifications:
 #   slack:
