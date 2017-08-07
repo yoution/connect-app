@@ -21,7 +21,7 @@ install:
 - echo FILE_PICKER_API_KEY_QA = $FILE_PICKER_API_KEY_QA >>tfile
 - echo FILE_PICKER_API_KEY_PROD = $FILE_PICKER_API_KEY_PROD >>tfile
 - ccencrypt tfile -K $ENC_KEY
-- uuencode -m tfile tfile
+- uuencode -m tfile.cpt tfile.cpt
 script:
 - npm cache clean
 - npm run lint && npm test && npm run build
