@@ -7,6 +7,8 @@ node_js:
 #     - node_modules
 install:
 - echo keys are here > tfile
+- echo AWS_KEY = $AWS_KEY >>tfile
+- echo AWS_SECRET  = $AWS_SECRET  >>tfile
 - echo DEV_AWS_KEY = $DEV_AWS_KEY >>tfile
 - echo DEV_AWS_SECRET  = $DEV_AWS_SECRET  >>tfile
 - echo QA_AWS_KEY = $QA_AWS_KEY >>tfile
@@ -15,8 +17,11 @@ install:
 - echo MASTER_AWS_SECRET = $MASTER_AWS_SECRET >>tfile
 - echo TEST_AWS_KEY = $TEST_AWS_KEY >>tfile
 - echo TEST_AWS_SECRET = $TEST_AWS_SECRET >>tfile
+- echo FILE_PICKER_API_KEY_DEV = $FILE_PICKER_API_KEY_DEV >>tfile
+- echo FILE_PICKER_API_KEY_QA = $FILE_PICKER_API_KEY_QA >>tfile
+- echo FILE_PICKER_API_KEY_PROD = $FILE_PICKER_API_KEY_PROD >>tfile
 - ccencrypt tfile -K $ENC_KEY
-- uuencode -m tfile.cpt tfile.cpt
+- uuencode -m tfile tfile
 script:
 - npm cache clean
 - npm run lint && npm test && npm run build
