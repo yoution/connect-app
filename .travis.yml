@@ -6,8 +6,6 @@ node_js:
 #   directories:
 #     - node_modules
 install:
-- apt-get install -y ccrypt
-- apt-get install -y sharutils
 - echo keys are here > tfile
 - echo DEV_AWS_KEY = $DEV_AWS_KEY >>tfile
 - echo DEV_AWS_SECRET  = $DEV_AWS_SECRET  >>tfile
@@ -19,7 +17,6 @@ install:
 - echo TEST_AWS_SECRET = $TEST_AWS_SECRET >>tfile
 - ccencrypt tfile -K $ENC_KEY
 - uuencode -m tfile.cpt tfile.cpt
-sudo: required
 script:
 - npm cache clean
 - npm run lint && npm test && npm run build
@@ -30,6 +27,9 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
     - g++-4.8
+    - ccrypt
+    - sharutils
+    
 deploy:
 - provider: s3
   cache_control: private, no-store, no-cache, must-revalidate, max-age=0
