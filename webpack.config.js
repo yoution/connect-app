@@ -11,7 +11,7 @@ if (branch === 'qa')     process.env.ENV = 'QA'
 
 if (branch === 'feature/pen-test') {
   process.env.ACCOUNTS_APP_LOGIN_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect'
-  process.env.ACCOUNTS_APP_LOGIN_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect/registration'
+  process.env.ACCOUNTS_APP_REGISTER_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect/registration'
 }
 
 const config = require('appirio-tech-webpack-config')({
