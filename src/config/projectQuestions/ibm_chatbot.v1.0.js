@@ -46,7 +46,6 @@ const sections = [
         questions: [
           {
             id: 'projectInfo',
-            required: true,
             fieldName: 'description',
             description: 'Brief Description',
             title: 'Description',
@@ -95,15 +94,13 @@ const sections = [
           },
           {
             icon: 'question',
-            required: true,
-            title: 'Will the chatbot need to access data from any systems to support the capabilities you listed above? If so, please list the systems below. (Change to text box)',
+            title: 'Will the chatbot need to access data from any systems to support the capabilities you listed above? If so, please list the systems below.',
             description: '',
             type: 'textbox',
             fieldName: 'details.appDefinition.integrationSystems'
           },
           {
             icon: 'question',
-            required: true,
             title: 'Do you have any example agent conversations you can provide? If so, please paste them or any links to documents below (you’ll be able to upload documents later).',
             description: '',
             type: 'textbox',
@@ -111,8 +108,7 @@ const sections = [
           },
           {
             icon: 'question',
-            required: true,
-            title: 'Are you planning to transfer conversations to human agents? If so, please list the agents’ communication tools (e.g., Slack, LiveAgent, Intercom, etc.)',
+            title: 'Are you planning to transfer conversations to human agents? If so, please list the agents’ communication tools (e.g., Slack, LiveAgent, Intercom, etc.).',
             description: '',
             type: 'textbox',
             fieldName: 'details.appDefinition.transferToHumanAgents'
@@ -168,6 +164,7 @@ export const basicSections = [
             id: 'projectInfo',
             required: true,
             fieldName: 'description',
+            validationError: 'Please provide a description',
             description: 'Brief Description',
             title: 'Description',
             type: 'textbox'
@@ -175,6 +172,7 @@ export const basicSections = [
           {
             icon: 'question',
             required: true,
+            validationError: 'Please complete this section',
             title: 'Are you an existing Watson Virtual Assistant customer?',
             description: '',
             fieldName: 'details.appDefinition.existingWatsonCustomer',
@@ -187,6 +185,7 @@ export const basicSections = [
           {
             icon: 'question',
             required: true,
+            validationError: 'Please complete this section',
             title: 'Do you have an existing IBM Bluemix account?',
             description: '',
             type: 'radio-group',
@@ -198,7 +197,8 @@ export const basicSections = [
           },
           {
             icon: 'question',
-            // required: true,
+            required: true,
+            validationError: 'Please complete this section',
             title: 'What capabilities does the chatbot need to support?',
             description: '',
             type: 'checkbox-group',
@@ -216,7 +216,8 @@ export const basicSections = [
           {
             icon: 'question',
             required: true,
-            title: 'Will the chatbot need to access data from any systems to support the capabilities you listed above? If so, please list the systems below. (Change to text box)',
+            validationError: 'Please complete this section',
+            title: 'Will the chatbot need to access data from any systems to support the capabilities you listed above? If so, please list the systems below.',
             description: '',
             type: 'textbox',
             fieldName: 'details.appDefinition.integrationSystems'
@@ -224,6 +225,7 @@ export const basicSections = [
           {
             icon: 'question',
             required: true,
+            validationError: 'Please complete this section',
             title: 'Do you have any example agent conversations you can provide? If so, please paste them or any links to documents below (you’ll be able to upload documents later).',
             description: '',
             type: 'textbox',
@@ -232,7 +234,8 @@ export const basicSections = [
           {
             icon: 'question',
             required: true,
-            title: 'Are you planning to transfer conversations to human agents? If so, please list the agents’ communication tools (e.g., Slack, LiveAgent, Intercom, etc.)',
+            validationError: 'Please complete this section',
+            title: 'Are you planning to transfer conversations to human agents? If so, please list the agents’ communication tools (e.g., Slack, LiveAgent, Intercom, etc.).',
             description: '',
             type: 'textbox',
             fieldName: 'details.appDefinition.transferToHumanAgents'
