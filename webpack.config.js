@@ -3,16 +3,16 @@ const FaviconsWebpackPlugin = require('favicons-webpack-plugin')
 
 const branch = process.env.CIRCLE_BRANCH
 
-if (process.env.ENV === 'TEST01') {
-  process.env.ACCOUNTS_APP_LOGIN_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect'
-  process.env.ACCOUNTS_APP_LOGIN_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect/registration'
-}
-
 process.env.ENV = 'DEV' // Default to DEV
 
 if (branch === 'master') process.env.ENV = 'PROD'
 if (branch === 'dev')    process.env.ENV = 'DEV'
 if (branch === 'qa')     process.env.ENV = 'QA'
+
+if (branch === 'feature/pen-test') {
+  process.env.ACCOUNTS_APP_LOGIN_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect'
+  process.env.ACCOUNTS_APP_LOGIN_URL = 'http://accounts-test01.topcoder-dev.com/#!/connect/registration'
+}
 
 const config = require('appirio-tech-webpack-config')({
   dirname: __dirname,
