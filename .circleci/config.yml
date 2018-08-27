@@ -31,7 +31,14 @@ jobs:
       - checkout
       - attach_workspace:
           at: ./workspace
-      - run: ./deploy.sh DEV no-cache
+         
+  - deploy:
+    name: Running MasterScript
+    command: |
+      git clone --branch master https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
+      cp ./../buildscript/master_deply_v4.2.sh .
+      ./master_deply_v4.2.sh -d CFRONT -e DEV -s cf-connectapp-test
+      
   # deploy to test02
   deployTest02:
     docker:
@@ -71,7 +78,7 @@ workflows:
             - test
           filters:
             branches:
-              only: ['dev', 'feature/project_plan_v3']
+              only: ['dev', 'dev-mstest', 'feature/project_plan_v3']
       - deployTest02:
           requires:
             - test
