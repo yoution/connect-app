@@ -30,14 +30,13 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: ./workspace
-         
-  - deploy:
-    name: Running MasterScript
-    command: |
-      git clone --branch master https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
-      cp ./../buildscript/master_deply_v4.2.sh .
-      ./master_deply_v4.2.sh -d CFRONT -e DEV -s cf-connectapp-test
+          at: ./workspace     
+      - deploy:
+        name: Running MasterScript
+        command: |
+          git clone --branch master https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
+          cp ./../buildscript/master_deply_v4.2.sh .
+          ./master_deply_v4.2.sh -d CFRONT -e DEV -s cf-connectapp-test
       
   # deploy to test02
   deployTest02:
