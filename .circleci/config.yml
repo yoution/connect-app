@@ -6,7 +6,7 @@ jobs:
     steps:
       - run:
           name: checking out qa framework repo
-          command: git clone --branch develop https://$GITUSER:$GITPASSWD@github.com/appirio-tech/qa-framework-js.git ../qa-framework    
+          command: git clone --branch develop https://$GITUSER:$GITPASSWD@github.com/appirio-tech/qa-framework-js.git ../qa-framework
       - checkout
       - restore_cache:
           key: test-node-modules-{{ .Environment.CACHE_VERSION }}-{{ checksum "package-lock.json" }}
@@ -21,8 +21,8 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - dist            
-            
+            - dist
+
   # Just tests commited code.
   deployDev:
     docker:
@@ -69,7 +69,7 @@ jobs:
       - attach_workspace:
           at: ./workspace
       - run: ./deploy.sh DISCOURSE
-   
+
 
 workflows:
   version: 2
@@ -81,7 +81,7 @@ workflows:
             - test
           filters:
             branches:
-              only: ['dev', 'dev-msinteg', 'feature/project_intake_dependent_questions_v2', 'feature/create-project-select-add-ons']
+              only: ['dev', 'dev-msinteg', 'feature/project_intake_dependent_questions_v2']
       - deployTest02:
           requires:
             - test
