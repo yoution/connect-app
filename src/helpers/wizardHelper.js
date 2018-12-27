@@ -1,17 +1,41 @@
 /**
  * Helper methods for project creation/edition wizard mode and conditional questions.
+ *
+ * The main idea behind wizard helper is that it's a set of methods which contain all the wizard logic,
+ * and these methods can update projectTemplate.scope which is used to render the form.
+ * The form rendering component doesn't contain any wizard logic, it just renders projectTemplate.scope which
+ * was processed by the methods in this helper.
+ *
+ * Glossary:
+ *   - `step`: we call any section, subSection, question or option
+ *             step is defined as an object with indexes:
+ *             {
+ *                sectionIndex: Number,
+ *                subSectionIndex: Number,
+ *                questionIndex: Number,
+ *                optionIndex: Number,
+ *             }
+ *             If some index is not applicable it has be defined as -1.
+ *   - `stepObject`: it's an actual section, subSection, question or option object
+ *   - `read step`: is a step which has to be shown as one single step in wizard
  */
 import _ from 'lodash'
 import update from 'react-addons-update'
 import { evaluate, getFieldNamesFromExpression } from './dependentQuestionsHelper'
 import { flatten, unflatten } from 'flat'
 
+/**
+ * Defines how to display form steps which has been already filled
+ */
 export const PREVIOUS_STEP_VISIBILITY = {
   NONE: 'none',
   READ_ONLY: 'readOnly',
   WRITE: 'write',
 }
 
+/**
+ * Form template has many levels, and this constant define them
+ */
 export const LEVEL = {
   SECTION: 'section',
   SUB_SECTION: 'subSection',
@@ -19,12 +43,27 @@ export const LEVEL = {
   OPTION: 'option'
 }
 
+/**
+ * Define relation between steps
+ * - the step is next to another one
+ * - the step previous to another one
+ * - it's a same step
+ */
 export const STEP_DIR = {
   NEXT: +1,
   PREV: -1,
   SAME: 0,
 }
 
+/**
+ * Determines if step has to be hidden during wizard initialization
+ *
+ * @param {String} previousStepVisibility previous step visibility in wizard
+ * @param {Object} currentStep            the step which we iterate
+ * @param {Object} lastWizardStep         the last step which was previously filled
+ *
+ * @returns {Boolean} true if step has to be hidden
+ */
 const shouldStepBeHidden = (previousStepVisibility, currentStep, lastWizardStep) => {
   if (!lastWizardStep) {
     const level = getStepLevel(currentStep)
@@ -38,6 +77,14 @@ const shouldStepBeHidden = (previousStepVisibility, currentStep, lastWizardStep)
   }
 }
 
+/**
+ * Determine if `step` is any level ancestor of `parentStep`
+ *
+ * @param {Object} parentStep parent step
+ * @param {Object} step       step to check
+ *
+ * @returns {Boolean} true if `step` is any ancestor of `parentStep`
+ */
 const isSameStepAnyLevel = (parentStep, step) => {
   let isParent = parentStep.sectionIndex !== -1 && parentStep.sectionIndex === step.sectionIndex
 
@@ -56,14 +103,37 @@ const isSameStepAnyLevel = (parentStep, step) => {
   return isParent
 }
 
+/**
+ * Check if wizard mode is enabled in template
+ *
+ * @param {Object} template template
+ *
+ * @returns {Boolean} true if wizard mode is enabled
+ */
 export const isWizardModeEnabled = (template) => (
   _.get(template, 'wizard.enabled') || template.wizard === true
 )
 
+/**
+ * Get wizard previous step visibility
+ *
+ * @param {Object} template template
+ *
+ * @returns {String} previous step visibility
+ */
 export const getPreviousStepVisibility = (template) => (
   _.get(template, 'wizard.previousStepVisibility', PREVIOUS_STEP_VISIBILITY.WRITE)
 )
 
+/**
+ * Iterates through all the steps of the template: sections, subSections, questions, options.
+ *
+ * If iteratee returns `false` iteration will be stopped.
+ *
+ * @param {Object}   template template
+ * @param {Function} iteratee function which is called for each step with signature (stepObject, step)
+ * @param {Function} [iterateSublevelCondition] if returns false, we don't iterate through the steps of the child level
+ */
 export const forEachStep = (template, iteratee, iterateSublevelCondition) => {
   let iterateeResult
 
@@ -133,14 +203,17 @@ export const forEachStep = (template, iteratee, iterateSublevelCondition) => {
 }
 
 /**
- * Add auxillary `__wizard` property for sections, subSections and questions
+ * Initialize template with wizard and dependant questions features.
+ *
+ * Add auxillary `__wizard` property for sections, subSections, questions and options
  * if they have `wizard` property set to `true`.
  *
- * @param {Object} template         raw template
- * @param {Object} project          project data (non-flat)
- * @param {Object} incompleteWizard incomplete wizard props
+ * @param {Object}  template            raw template
+ * @param {Object}  project             project data (non-flat)
+ * @param {Object}  incompleteWizard    incomplete wizard props
+ * @param {Boolean} isReadOptimizedMode if true wizard is inited in read optimized mode
  *
- * @returns {Object} template with initialized `__wizard` property
+ * @returns {Object} initialized template
  */
 export const initWizard = (template, project, incompleteWizard, isReadOptimizedMode) => {
   let wizardTemplate = _.cloneDeep(template)
@@ -236,8 +309,23 @@ export const initWizard = (template, project, incompleteWizard, isReadOptimizedM
   }
 }
 
+/**
+ * Gets sign of a number as Math.sign is not cross-browser
+ *
+ * @param {Number} x number
+ *
+ * @returns {Number} sign of a number
+ */
 const sign = (x) => ((x > 0) - (x < 0)) || +x
 
+/**
+ * Return direction between two steps
+ *
+ * @param {Object} step1 step
+ * @param {Object} step2 step
+ *
+ * @returns {String} direction between two steps
+ */
 const getDirForSteps = (step1, step2) => {
   const optionSign = sign(step2.optionIndex - step1.optionIndex)
   const questionSign = sign(step2.questionIndex - step1.questionIndex)
@@ -249,6 +337,15 @@ const getDirForSteps = (step1, step2) => {
   return dir
 }
 
+/**
+ * Returns next step in desired direction inside template
+ *
+ * @param {Object} template    template
+ * @param {Object} currentStep current step
+ * @param {String} dir         direction
+ *
+ * @returns {Object} next step in direction
+ */
 const getStepByDir = (template, currentStep, dir) => {
   // get the sibling of the current step if possible
   let dirStep = getSiblingStepByDir(template, currentStep, dir)
@@ -286,6 +383,18 @@ const getStepByDir = (template, currentStep, dir) => {
   return null
 }
 
+/**
+ * Returns next step which can be shown in desired direction inside template
+ *
+ * The difference from `getStepByDir()` is that this method skips steps which are hidden by conditions
+ * as such steps won't be visible.
+ *
+ * @param {Object} template    template
+ * @param {Object} currentStep current step
+ * @param {String} dir         direction
+ *
+ * @returns {Object} next step which can be shown in direction
+ */
 const getStepToShowByDir = (template, currentStep, dir) => {
   let tempStep = currentStep
   let tempStepObject
@@ -298,14 +407,40 @@ const getStepToShowByDir = (template, currentStep, dir) => {
   return tempStep
 }
 
+/**
+ * Returns next step which can be shown inside template
+ *
+ * @param {Object} template    template
+ * @param {Object} currentStep current step
+ *
+ * @returns {Object} next step which can be shown in direction
+ */
 export const getNextStepToShow = (template, currentStep) => (
   getStepToShowByDir(template, currentStep, STEP_DIR.NEXT)
 )
 
+/**
+ * Returns previous step which can be shown inside template
+ *
+ * @param {Object} template    template
+ * @param {Object} currentStep current step
+ *
+ * @returns {Object} next step which can be shown in direction
+ */
 export const getPrevStepToShow = (template, currentStep) => (
   getStepToShowByDir(template, currentStep, STEP_DIR.PREV)
 )
 
+
+/**
+ * Returns sibling step in desired direction inside template
+ *
+ * @param {Object} template template
+ * @param {Object} step     current step
+ * @param {String} dir      direction
+ *
+ * @returns {Object} sibling step in direction
+ */
 const getSiblingStepByDir = (template, step, dir) => {
   const level = getStepLevel(step)
   let siblingStep = null
@@ -345,14 +480,42 @@ const getSiblingStepByDir = (template, step, dir) => {
   }
 }
 
+/**
+ * Returns next sibling step inside template
+ *
+ * @param {Object} template template
+ * @param {Object} step     current step
+ *
+ * @returns {Object} next sibling step
+ */
 const getNextSiblingStep = (template, step) => (
   getSiblingStepByDir(template, step, STEP_DIR.NEXT)
 )
 
+/**
+ * Returns previous sibling step inside template
+ *
+ * @param {Object} template template
+ * @param {Object} step     current step
+ *
+ * @returns {Object} previous sibling step
+ */
 const getPrevSiblingStep = (template, step) => (
   getSiblingStepByDir(template, step, STEP_DIR.PREV)
 )
 
+/**
+ * Update option in template without template mutation
+ *
+ * @param {Object} template        template
+ * @param {Number} sectionIndex    section index
+ * @param {Number} subSectionIndex subSection index
+ * @param {Number} questionIndex   question index
+ * @param {Number} optionIndex     option index
+ * @param {Object} updateRule      rule acceptable by update function
+ *
+ * @returns {Object} updated template
+ */
 const updateOption = (template, sectionIndex, subSectionIndex, questionIndex, optionIndex, updateRule) => {
   const section = template.sections[sectionIndex]
   const subSection = section.subSections[subSectionIndex]
@@ -439,6 +602,19 @@ const updateSection = (template, sectionIndex, updateRule) => {
   return updatedTemplate
 }
 
+/**
+ * Update any kind of step sections, subSection, question or option without template mutation.
+ *
+ * If level is not defined, it automatically detects the level of step we are updating.
+ * If level is defined, it forces to update step on that level.
+ *
+ * @param {Object} template   template
+ * @param {Object} step       section index
+ * @param {Object} updateRule rule acceptable by update function
+ * @param {String} [level]    step level
+ *
+ * @returns {Object} updated template
+ */
 const updateStepObject = (template, step, updateRule, level) => {
   const { sectionIndex, subSectionIndex, questionIndex, optionIndex } = step
   let updatedTemplate = template
@@ -475,6 +651,16 @@ const updateStepObject = (template, step, updateRule, level) => {
   return updatedTemplate
 }
 
+/**
+ * Get step object from template using step (step indexes)
+ *
+ * If level is not defined, it automatically detects the level of step object to return.
+ * If level is defined, it forces to return step object on that level
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ * @param {String} [level]  step level
+ */
 export const getStepObject = (template, step, level) => {
   const { section, subSection, question, option } = getStepAllLevelsObjects(template, step)
 
@@ -488,6 +674,14 @@ export const getStepObject = (template, step, level) => {
   }
 }
 
+/**
+ * Get step objects for all level of step.
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ *
+ * @returns {{section: Object, subSection: Object, question: Object, option: Object}} step objects for all levels of step
+ */
 const getStepAllLevelsObjects = (template, step) => {
   const { sectionIndex, subSectionIndex, questionIndex, optionIndex } = step
   const section = sectionIndex !== -1 ? template.sections[sectionIndex] : null
@@ -503,6 +697,14 @@ const getStepAllLevelsObjects = (template, step) => {
   }
 }
 
+/**
+ * Check if the step is a step on a certain level
+ *
+ * @param {Object} step  step
+ * @param {String} level step level
+ *
+ * @returns {Boolean} true if step has a certain level
+ */
 const isStepLevel = (step, level) => {
   if (!step) {
     return false
@@ -519,6 +721,13 @@ const isStepLevel = (step, level) => {
   }
 }
 
+/**
+ * Get the step level
+ *
+ * @param {Object} step step
+ *
+ * @returns {String} step level
+ */
 const getStepLevel = (step) => {
   if (isStepLevel(step, LEVEL.OPTION)) {
     return LEVEL.OPTION
@@ -539,6 +748,13 @@ const getStepLevel = (step) => {
   return null
 }
 
+/**
+ * Get parent step
+ *
+ * @param {Object} step step
+ *
+ * @returns {Object} parent step
+ */
 const getParentStep = (step) => {
   if (step.optionIndex !== -1) {
     return {
@@ -565,6 +781,14 @@ const getParentStep = (step) => {
   }
 }
 
+/**
+ * Get step children
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ *
+ * @returns {Array} list of children steps
+ */
 const getStepChildren = (template, step) => {
   const stepObject = getStepObject(template, step)
 
@@ -629,6 +853,14 @@ export const updateStepsByConditions = (template, project) => {
   }
 }
 
+/**
+ * Removes values of the fields which are hidden by conditions from project data
+ *
+ * @param {Object} template template
+ * @param {Object} project  project data (non-flat)
+ *
+ * @returns {Object} project data without data of hidden fields
+ */
 export const removeValuesOfHiddenSteps = (template, project) => {
   let updatedProject = project
 
@@ -670,6 +902,14 @@ export const removeValuesOfHiddenSteps = (template, project) => {
   return updatedProject
 }
 
+/**
+ * Returns first found step (only one) which has to be updated by condition
+ *
+ * @param {Object} template        template
+ * @param {Object} flatProjectData project data (flat)
+ *
+ * @returns {Object} step
+ */
 const getStepWhichMustBeUpdatedByCondition = (template, flatProjectData) => {
   const result = {
     stepToUpdate: null
@@ -702,6 +942,18 @@ const getStepWhichMustBeUpdatedByCondition = (template, flatProjectData) => {
   return result
 }
 
+/**
+ * Finalize/unfinalize step
+ *
+ * When we've done with step we want to finalize it as per previousStepVisibility hide or make it read-only.
+ * This method does it. It also can the reverse operation if `value` is defined as `false`
+ *
+ * @param {Object}  template template
+ * @param {Object}  step     step
+ * @param {Boolean} value
+ *
+ * @returns {Object} updated template
+ */
 const finalizeStep = (template, step, value = true) => {
   let updatedTemplate = template
 
@@ -740,6 +992,15 @@ const finalizeStep = (template, step, value = true) => {
   return updatedTemplate
 }
 
+/**
+ * Update template so the next step in defined direction is shown
+ *
+ * @param {Object} template    template
+ * @param {Object} currentStep current step
+ * @param {String} dir         direction
+ *
+ * @returns {Object} updated template
+ */
 export const showStepByDir = (template, currentStep, dir) => {
   let updatedTemplate = template
   let tempStep
@@ -807,6 +1068,15 @@ export const showStepByDir = (template, currentStep, dir) => {
   }
 }
 
+/**
+ * Update template so we show the `destinationStep` instead of `currentStep`
+ *
+ * @param {Object} template        template
+ * @param {Object} currentStep     current step
+ * @param {Object} destinationStep destinationStep
+ *
+ * @returns {Object} updated template
+ */
 export const rewindToStep = (template, currentStep, destinationStep) => {
   const dir = getDirForSteps(currentStep, destinationStep)
   let tempStep = currentStep
@@ -828,12 +1098,28 @@ export const rewindToStep = (template, currentStep, destinationStep) => {
   return updatedTemplate
 }
 
+/**
+ * Determines if step has dependant steps
+ *
+ * @param {Object} template template
+ * @param {Object} step     template
+ *
+ * @returns {Boolean} true if step has any dependant steps
+ */
 export const isStepHasDependencies = (template, step) => {
   const stepObject = getStepObject(template, step)
 
   return _.includes(_.get(template, '__wizard.dependantFields', []), stepObject.fieldName)
 }
 
+/**
+ * Check if step is defined as a step in wizard.
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ *
+ * @returns {Boolean} true if step is defined as a step in wizard
+ */
 export const findRealStep = (template, step) => {
   let tempStep = step
   let tempStepObject = getStepObject(template, tempStep)
@@ -846,6 +1132,14 @@ export const findRealStep = (template, step) => {
   return tempStep
 }
 
+/**
+ * Update template so the `step` is showed as editable (non read-only)
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ *
+ * @returns {Object} updated template
+ */
 export const makeStepEditable = (template, step) => {
   let updatedTemplate = template
 
@@ -859,6 +1153,15 @@ export const makeStepEditable = (template, step) => {
   return updatedTemplate
 }
 
+
+/**
+ * Update template so the `step` is showed as read-only
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ *
+ * @returns {Object} updated template
+ */
 export const makeStepReadonly = (template, step) => {
   let updatedTemplate = template
 
@@ -872,6 +1175,14 @@ export const makeStepReadonly = (template, step) => {
   return updatedTemplate
 }
 
+/**
+ * Finds next either sibling or ancestor step
+ *
+ * @param {Object} template template
+ * @param {Object} step     step
+ *
+ * @returns {Object} step
+ */
 const getNextSiblingOrAncestorStep = (template, step) => {
   const sibling = getNextSiblingStep(template, step)
 
@@ -888,6 +1199,14 @@ const getNextSiblingOrAncestorStep = (template, step) => {
   return null
 }
 
+/**
+ * Adds data which manged by the step to the snapshot
+ *
+ * @param {Object} snapshot snapshot
+ * @param {Object} template template
+ * @param {Object} step      tep
+ * @param {Object} flatData flat data
+ */
 const saveStepDataToSnapshot = (snapshot, template, step, flatData) => {
   const stepObject = getStepObject(template, step)
 
@@ -916,6 +1235,14 @@ const saveStepDataToSnapshot = (snapshot, template, step, flatData) => {
   }
 }
 
+/**
+ * Adds snapshot of data of the provided "real step"
+ *
+ * @param {Array}  snapshotsStorage array to store snapshots
+ * @param {Object} step             step
+ * @param {Object} template         template
+ * @param {Object} flatData         flat data
+ */
 export const pushStepDataSnapshot = (snapshotsStorage, step, template, flatData) => {
   const snapshot = {}
 
@@ -938,6 +1265,18 @@ export const pushStepDataSnapshot = (snapshotsStorage, step, template, flatData)
   })
 }
 
+/**
+ * Pop snapshot of data of the provided "real step"
+ *
+ * It removes data form `snapshotsStorage` and returns it
+ *
+ * @param {Array}  snapshotsStorage array to store snapshots
+ * @param {Object} step             step
+ * @param {Object} template         template
+ * @param {Object} flatData         flat data
+ *
+ * @returns {Object} snapshot
+ */
 export const popStepDataSnapshot = (snapshotsStorage, step) => {
   const savedDataIndex = snapshotsStorage.findIndex((item) => _.isEqual(item.step, step))
   const savedData = savedDataIndex !== -1 ? snapshotsStorage[savedDataIndex] : null
