@@ -4,6 +4,7 @@ import seeAttachedWrapperField from './SeeAttachedWrapperField'
 import FormsyForm from 'appirio-tech-react-components/components/Formsy'
 const TCFormFields = FormsyForm.Fields
 import _ from 'lodash'
+import AddonOptions from './AddonOptions/AddonOptions'
 
 import SpecQuestionList from './SpecQuestionList/SpecQuestionList'
 import SpecQuestionIcons from './SpecQuestionList/SpecQuestionIcons'
@@ -29,6 +30,17 @@ const getIcon = icon => {
   }
 }
 
+const filterAddonQuestions = (productTemplates, question) =>
+  productTemplates.filter(
+    d =>
+      d.category === question.category &&
+      question.subCategories.includes(d.subCategory)
+  )
+const formatAddonOptions = options => options.map(o => ({
+  label: o.name,
+  value: { id: o.id },
+}))
+
 // { isRequired, represents the overall questions section's compulsion, is also available}
 const SpecQuestions = ({
   questions,
@@ -41,6 +53,7 @@ const SpecQuestions = ({
   stopEditReadOnly,
   cancelEditReadOnly,
   isProjectDirty,
+  productTemplates,
 }) => {
   const currentProjectData = isProjectDirty ? dirtyProject : project
 
@@ -197,6 +210,10 @@ const SpecQuestions = ({
         included: false
       })
       break
+    case 'add-ons':
+      ChildElem = AddonOptions
+      _.assign(elemProps, { options: formatAddonOptions(filterAddonQuestions(productTemplates, q)) })
+      break
     default:
       ChildElem = <noscript />
     }
@@ -226,6 +243,15 @@ const SpecQuestions = ({
         const values = _.get(currentProjectData, q.fieldName)
         const options = _.filter(q.options, (option) => (
           _.includes(values, option.value)
+        ))
+        textValue = _.map(options, 'label').join(', ')
+        shouldHideFormField = true
+        break
+      }
+      case 'add-ons': {
+        const values = _.get(currentProjectData, q.fieldName)
+        const options = _.filter(elemProps.options, (option) => (
+          _.find(values, { id: _.get(option, 'value.id') })
         ))
         textValue = _.map(options, 'label').join(', ')
         shouldHideFormField = true
@@ -297,6 +323,10 @@ SpecQuestions.propTypes = {
    * If true, then `hidden` property of questions will be ignored and hidden questions will be rendered
    */
   showHidden: PropTypes.bool,
+  /**
+   * contains the productTypes required for rendering add-on type questions
+   */
+  productTemplates: PropTypes.array.isRequired,
 }
 
 export default SpecQuestions
