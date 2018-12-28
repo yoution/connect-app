@@ -202,15 +202,15 @@ const SpecSection = props => {
         </div>
       )
     case 'message':
-    return (
-      <div>
-        {!isReadOnly && (
-          <div className="message-title">
-            {props.description}
-          </div>
-        )}
-      </div>
-    )
+      return (
+        <div>
+          {!isReadOnly && (
+            <div className="message-title">
+              {props.description}
+            </div>
+          )}
+        </div>
+      )
     case 'files': {
       const projectLatest = isProjectDirty ? dirtyProject : project
       const files = _.get(projectLatest, props.fieldName, [])
